@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>VisionVoice AI Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 760px; margin: auto; }
+    input, button { font-size: 16px; }
+    #result { white-space: pre-wrap; background:#f6f6f6; padding:12px; border-radius:6px; margin-top:12px; }
+  </style>
+</head>
+<body>
+  <h2>VisionVoice AI — Test</h2>
+  <p>Select an image and click <strong>Analyze Image</strong>. The app will describe the image and speak the narration.</p>
+
+  <input type="file" id="imageInput" accept="image/*"><br><br>
+  <button id="analyzeBtn">Analyze Image</button>
+  <div id="status" style="margin-top:12px"></div>
+  <pre id="result"></pre>
+
+  <script>
+    const btn = document.getElementById("analyzeBtn");
+    const resultEl = document.getElementById("result");
+    const statusEl = document.getElementById("status");
+
+    async function uploadImage() {
+      const fileInput = document.getElementById("imageInput");
+      if (!fileInput.files.length) {
+        alert("Please select an image first!");
+        return;
+      }
+
+      statusEl.innerText = "Uploading image...";
+      resultEl.innerText = "";
+
+      const formData = new FormData();
+      formData.append("image", fileInput.files[0]);
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/vision", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        resultEl.innerText = JSON.stringify(data, null, 2);
+        statusEl.innerText = `Status: ${data.status}`;
+
+        if (data && data.audio_b64) {
+          // Play returned base64 MP3
+          const byteCharacters = atob(data.audio_b64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: "audio/mpeg" });
+          const url = URL.createObjectURL(blob);
+
+          const audio = new Audio(url);
+          audio.play().catch(e => {
+            console.warn("Audio play failed:", e);
+            // fallback to browser TTS
+            if (data.narration) speakText(data.narration);
+          });
+
+        } else if (data && data.narration) {
+          // No audio returned — use browser TTS fallback
+          speakText(data.narration);
+        }
+
+      } catch (err) {
+        console.error("Request failed:", err);
+        statusEl.innerText = "Request failed: " + err.message;
+      }
+    }
+
+    function speakText(text) {
+      if (!("speechSynthesis" in window)) {
+        alert("No TTS available in this browser");
+        return;
+      }
+      const utter = new SpeechSynthesisUtterance(text);
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utter);
+    }
+
+    btn.addEventListener("click", uploadImage);
+  </script>
+</body>
+</html>

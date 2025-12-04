@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VisionVoice AI — Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(139, 92, 246, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.8), 0 0 60px rgba(139, 92, 246, 0.5); }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      min-height: 100vh;
+      padding: 20px;
+      color: #0f172a;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: float 20s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3), 
+                  0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      animation: slideIn 0.8s ease-out;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #4facfe, #667eea);
+      background-size: 200% 100%;
+      animation: gradientShift 3s linear infinite;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      padding: 48px 40px 40px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -5%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 10s ease-in-out infinite reverse;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg, #ffffff 0%, #f0f0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      opacity: 0.95;
+      line-height: 1.6;
+      max-width: 700px;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+    }
+
+    #imageInput {
+      position: absolute;
+      left: -9999px;
+      opacity: 0;
+    }
+
+    .file-input-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 24px;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #475569;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-input-label::before {
+      content: '📁';
+      font-size: 1.1rem;
+    }
+
+    .file-input-label::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(102, 126, 234, 0.1);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .file-input-label:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    .file-input-label:hover {
+      background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+      border-color: #cbd5e0;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-input-label:focus-within {
+      outline: 3px solid #667eea;
+      outline-offset: 3px;
+    }
+
+    button {
+      padding: 13px 26px;
+      border-radius: 14px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    button:focus {
+      outline: 3px solid #667eea;
+      outline-offset: 3px;
+    }
+
+    #analyzeBtn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    #analyzeBtn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+    }
+
+    #analyzeBtn:active {
+      transform: translateY(-1px) scale(1);
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      color: #475569;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    button.secondary:hover {
+      background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+      border-color: #cbd5e0;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    #status {
+      display: inline-flex;
+      align-items: center;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: #166534;
+      font-weight: 600;
+      margin-bottom: 28px;
+      border: 2px solid #bbf7d0;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #status::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    #status:hover::before {
+      left: 100%;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(22, 101, 52, 0.2);
+      border-top-color: #16a34a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #videoWrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      margin-top: 28px;
+    }
+
+    @media (min-width: 768px) {
+      #videoWrap {
+        grid-template-columns: 400px 1fr;
+      }
+    }
+
+    .video-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    video {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      aspect-ratio: 4/3;
+      border-radius: 16px;
+      border: 3px solid transparent;
+      background: linear-gradient(white, white) padding-box,
+                  linear-gradient(135deg, #667eea, #764ba2, #f093fb) border-box;
+      object-fit: cover;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2),
+                  0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      transition: transform 0.3s ease;
+    }
+
+    video:hover {
+      transform: scale(1.02);
+    }
+
+    .results-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #result {
+      white-space: pre-wrap;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid #e2e8f0;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #1e293b;
+      min-height: 160px;
+      font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08),
+                  0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #result::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #4facfe);
+      background-size: 200% 100%;
+      animation: gradientShift 3s linear infinite;
+      border-radius: 16px 16px 0 0;
+    }
+
+    #audioPlayer {
+      width: 100%;
+      border-radius: 14px;
+      outline: none;
+      height: 54px;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      border: 2px solid #475569;
+    }
+
+    #audioPlayer:focus {
+      outline: 3px solid #667eea;
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 767px) {
+      .header {
+        padding: 36px 24px 28px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+      }
+
+      .content {
+        padding: 28px 24px;
+      }
+
+      .controls {
+        gap: 12px;
+      }
+
+      button, .file-input-label {
+        font-size: 0.9rem;
+        padding: 12px 20px;
+      }
+
+      video {
+        max-width: 100%;
+      }
+
+      #result {
+        font-size: 0.9rem;
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button, .file-input-label {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+      }
+
+      .file-input-wrapper {
+        width: 100%;
+      }
+
+      .file-input-label {
+        display: flex;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>VisionVoice AI — Demo</h1>
+      <p class="subtitle">Upload an image or capture a snapshot from your webcam. The app will describe the scene and play a friendly voice narration powered by advanced AI vision technology.</p>
+    </div>
+
+    <div class="content">
+      <div class="controls">
+        <div class="file-input-wrapper">
+          <input type="file" id="imageInput" accept="image/*">
+          <label for="imageInput" class="file-input-label">Choose Image</label>
+        </div>
+        <button id="analyzeBtn">Analyze Image</button>
+        <button id="captureBtn" class="secondary">Capture Snapshot</button>
+        <button id="replayBtn" class="secondary">Replay Audio</button>
+        <button id="copyBtn" class="secondary">Copy Narration</button>
+      </div>
+
+      <div id="status">Ready</div>
+
+      <div id="videoWrap">
+        <div class="video-container">
+          <video id="webcam" autoplay muted playsinline></video>
+        </div>
+        <div class="results-container">
+          <div id="result" aria-live="polite">No results yet.</div>
+          <audio id="audioPlayer" controls></audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const captureBtn = document.getElementById("captureBtn");
+  const replayBtn = document.getElementById("replayBtn");
+  const copyBtn = document.getElementById("copyBtn");
+  const statusEl = document.getElementById("status");
+  const resultEl = document.getElementById("result");
+  const audioPlayer = document.getElementById("audioPlayer");
+  const webcam = document.getElementById("webcam");
+  const imageInput = document.getElementById("imageInput");
+
+  let lastNarrationText = "";
+  let lastAudioUrl = "";
+
+  // unlock audio context on first gesture
+  document.addEventListener("click", () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        if (ctx.state === "suspended") ctx.resume();
+      }
+    } catch(e) { }
+  }, { once: true });
+
+  // start webcam
+  async function startWebcam() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+      webcam.srcObject = stream;
+    } catch (e) {
+      console.warn("Unable to access webcam:", e);
+      captureBtn.disabled = true;
+      statusEl.innerText = "Webcam not available.";
+    }
+  }
+  startWebcam();
+
+  function setLoading(yes, text="") {
+    statusEl.innerHTML = yes ? (text || "Analyzing... <span class='spinner'></span>") : (text || "Ready");
+  }
+
+  // common upload function
+  async function sendImageFile(file) {
+    setLoading(true, "Uploading image and requesting narration...");
+    resultEl.innerText = "";
+    audioPlayer.src = "";
+    lastNarrationText = "";
+    lastAudioUrl = "";
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch("http://127.0.0.1:5000/vision", {
+        method: "POST",
+        body: formData
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        setLoading(false, `Server error: ${res.status}`);
+        resultEl.innerText = txt;
+        return;
+      }
+      const data = await res.json();
+      // pretty debug display with bold objects
+      const debug = data.debug || {};
+      let pretty = `Narration:\n${data.narration || ""}\n\nDebug:\nLabels: ${JSON.stringify(debug.labels || [])}\nObjects: ${JSON.stringify(debug.objects || [])}\nWeb entities: ${JSON.stringify(debug.web_entities || [])}`;
+      resultEl.innerText = pretty;
+      setLoading(false, `Status: ${data.status}`);
+
+      lastNarrationText = data.narration || "";
+
+      if (data.audio_b64) {
+        const blob = base64ToBlob(data.audio_b64, "audio/mpeg");
+        const url = URL.createObjectURL(blob);
+        lastAudioUrl = url;
+        audioPlayer.src = url;
+        try {
+          await audioPlayer.play();
+        } catch(err) {
+          console.warn("Autoplay blocked:", err);
+          // fallback to browser TTS
+          speakText(lastNarrationText);
+        }
+      } else if (lastNarrationText) {
+        // fallback TTS
+        speakText(lastNarrationText);
+      }
+    } catch (err) {
+      setLoading(false, "Request failed");
+      resultEl.innerText = "Request failed: " + (err.message || err);
+      console.error(err);
+    }
+  }
+
+  // handlers
+  analyzeBtn.addEventListener("click", () => {
+    const files = imageInput.files;
+    if (!files || !files.length) {
+      alert("Please choose an image file first.");
+      return;
+    }
+    sendImageFile(files[0]);
+  });
+
+  captureBtn.addEventListener("click", async () => {
+    // capture snapshot from webcam as image blob
+    setLoading(true, "Capturing snapshot...");
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = webcam.videoWidth || 640;
+      canvas.height = webcam.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(async (blob) => {
+        if (!blob) { setLoading(false, "Capture failed"); return; }
+        // convert blob to File to send as form
+        const file = new File([blob], "snapshot.jpg", { type: "image/jpeg" });
+        await sendImageFile(file);
+      }, "image/jpeg", 0.9);
+    } catch(e) {
+      console.error("Capture error:", e);
+      setLoading(false, "Capture failed");
+    }
+  });
+
+  replayBtn.addEventListener("click", async () => {
+    if (lastAudioUrl) {
+      audioPlayer.pause();
+      audioPlayer.currentTime = 0;
+      try { await audioPlayer.play(); } catch(e) { console.warn(e); speakText(lastNarrationText); }
+    } else if (lastNarrationText) {
+      speakText(lastNarrationText);
+    } else {
+      alert("No narration available yet.");
+    }
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    if (!lastNarrationText) { alert("No narration to copy."); return; }
+    await navigator.clipboard.writeText(lastNarrationText);
+    alert("Narration copied to clipboard.");
+  });
+
+  // util: base64 to blob
+  function base64ToBlob(base64, mime) {
+    const bin = atob(base64);
+    const len = bin.length;
+    const arr = new Uint8Array(len);
+    for (let i=0;i<len;i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
+  // fallback browser TTS
+  function speakText(text) {
+    if (!text) return;
+    if (!("speechSynthesis" in window)) { alert("TTS not available in this browser."); return; }
+    const ut = new SpeechSynthesisUtterance(text);
+    ut.rate = 1;
+    ut.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(ut);
+  }
+
+  // unlock audio on first user gesture (also helps mobile)
+  document.addEventListener("click", () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        if (ctx.state === "suspended") ctx.resume();
+      }
+    } catch(e) {}
+  }, { once: true });
+</script>
+</body>
+</html>
